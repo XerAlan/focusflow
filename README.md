@@ -315,6 +315,12 @@ npm run package
 
 ## 常见问题
 
+### Q0. 启动报错 `Cannot read properties of undefined (reading 'handle')`？
+A：环境变量 `ELECTRON_RUN_AS_NODE=1` 把 electron 二进制强制跑成了 Node 模式（不是主进程），导致 `require('electron')` 返回路径字符串而不是 API。本项目已通过 `scripts/start-dev.cjs` 包装器在启动前自动清理该变量（`npm run dev` 已修复）。如果直接用 `electron .` 启动，请先：
+- **PowerShell**: `$env:ELECTRON_RUN_AS_NODE=""; electron .`
+- **CMD**: `set ELECTRON_RUN_AS_NODE= && electron .`
+- **bash**: `unset ELECTRON_RUN_AS_NODE && electron .`
+
 ### Q1. 安装包能安装到非系统盘吗？
 A：可以。`electron-builder.json` 中 `oneClick: false` 且 `allowToChangeInstallationDirectory: true`，安装时可选路径。
 
