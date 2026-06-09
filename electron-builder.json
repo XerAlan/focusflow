@@ -1,0 +1,32 @@
+{
+  "appId": "com.focusflow.app",
+  "productName": "FocusFlow",
+  "copyright": "Copyright © 2026 FocusFlow",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.ico",
+    "artifactName": "FocusFlow-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "FocusFlow",
+    "deleteAppDataOnUninstall": false
+  }
+}
