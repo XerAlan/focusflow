@@ -76,6 +76,8 @@ textarea {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 0;          /* 关键：允许子元素正确收缩 */
+  overflow: hidden;        /* 防止内容溢出导致底部空白 */
   background: var(--bg-primary);
 }
 
@@ -121,8 +123,9 @@ textarea {
   grid-template-columns: 320px 1fr 360px;
   gap: 12px;
   padding: 12px;
-  flex: 0 1 auto;
-  min-height: 0;
+  /* 关键：flex: 1 让主区在屏幕变大时增长填满空白 */
+  flex: 1 1 0;
+  min-height: 0;          /* 允许收缩到比内容更小 */
 }
 
 .panel {
@@ -817,9 +820,11 @@ textarea {
   grid-template-columns: 1fr 220px;
   gap: 12px;
   padding: 0 12px 12px;
-  flex-shrink: 0;
-  min-height: 220px;
-  max-height: 260px;
+  /* 使用 vh 单位自适应不同屏幕分辨率 */
+  flex: 0 1 auto;                 /* 不增长，避免挤压主区 */
+  min-height: clamp(180px, 24vh, 240px);
+  max-height: clamp(240px, 32vh, 360px);
+  flex-shrink: 0;                 /* 短屏时不收缩（避免内容被截） */
 }
 
 .notes-panel {
@@ -1010,4 +1015,85 @@ textarea {
   width: 12px;
   height: 12px;
   accent-color: var(--color-primary);
+}
+
+/* ============ 下拉菜单 ============ */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  min-width: 180px;
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2);
+  padding: 4px 0;
+  animation: drop-in 0.12s ease-out;
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-section {
+  padding: 4px 0;
+}
+
+.dropdown-label {
+  padding: 4px 12px;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: background 0.1s;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-elevated);
+}
+
+.dropdown-item.active {
+  color: var(--color-primary);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 0;
+}
+
+.dropdown-action {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 12px;
+}
+
+.dropdown-action:hover {
+  background: rgba(124, 77, 255, 0.1);
 }

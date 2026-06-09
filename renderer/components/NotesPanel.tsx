@@ -3,14 +3,22 @@
  * - 左侧：日期侧边栏（最近 30 天 + 更早留言）
  * - 右侧：textarea 直接编辑（无模态）
  * - 自动保存（500ms 防抖）
- * - 顶部工具栏：导出 Markdown / 删除
- * - 当天高亮 + 「今天」标签
+ * - 顶部工具栏：
+ *   - 📤 导出 ▾（下拉菜单：范围 × 格式）
+ *   - 🗑 删除当前日期
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNoteStore } from '../store/noteStore';
 import { useUIStore } from '../store/uiStore';
 import { localDateKey } from '../utils/date';
-import { buildNotesMarkdown } from '../utils/markdownExport';
+import {
+  buildExport,
+  formatExt,
+  formatLabel,
+  rangeLabel,
+  type ExportFormat,
+  type ExportRange
+} from '../utils/markdownExport';
 import { saveTextFile } from '../ipc';
 
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -26,6 +34,9 @@ const formatFullDate = (key: string): string => {
   return `${y} 年 ${m} 月 ${d} 日`;
 };
 
+const RANGES: ExportRange[] = ['all', 'week', 'month', 'last7', 'last30'];
+const FORMATS: ExportFormat[] = ['markdown', 'json', 'txt'];
+
 export const NotesPanel: React.FC = () => {
   const notes = useNoteStore((s) => s.notes);
   const setNote = useNoteStore((s) => s.setNote);
@@ -37,6 +48,12 @@ export const NotesPanel: React.FC = () => {
   const [draft, setDraft] = useState<string>('');
   const [savedFlag, setSavedFlag] = useState<'idle' | 'saving' | 'saved'>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 导出菜单状态
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportRange, setExportRange] = useState<ExportRange>('all');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('markdown');
+  const exportMenuRef = useRef<HTMLDivElement | null>(null);
 
   // 切换日期时同步内容
   useEffect(() => {
@@ -74,6 +91,21 @@ export const NotesPanel: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 点击外部关闭导出菜单
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(e.target as Node)
+      ) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [exportOpen]);
+
   // 构造日期列表：最近 30 天 + 更早有内容的
   const recentKeys: string[] = useMemo(() => {
     const out: string[] = [];
@@ -96,24 +128,33 @@ export const NotesPanel: React.FC = () => {
     [notes, recentSet]
   );
 
-  // 导出 Markdown
+  // 执行导出
   const handleExport = async () => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       setNote(selectedDate, draft);
     }
-    const content = buildNotesMarkdown(useNoteStore.getState().notes);
+    const allNotes = useNoteStore.getState().notes;
+    const content = buildExport(exportFormat, allNotes, { range: exportRange });
     const stamp = new Date().toISOString().slice(0, 10);
-    const res = await saveTextFile({
-      defaultName: `focusflow-notes-${stamp}.md`,
-      content,
-      filters: [{ name: 'Markdown', extensions: ['md', 'markdown'] }]
-    });
+    const ext = formatExt(exportFormat);
+    const filename = `focusflow-notes-${exportRange}-${stamp}.${ext}`;
+    const filters =
+      exportFormat === 'markdown'
+        ? [{ name: 'Markdown', extensions: ['md', 'markdown'] }]
+        : exportFormat === 'json'
+        ? [{ name: 'JSON', extensions: ['json'] }]
+        : [{ name: '纯文本', extensions: ['txt'] }];
+    const res = await saveTextFile({ defaultName: filename, content, filters });
+    setExportOpen(false);
     if (res.canceled) return;
     if (res.error) {
       toast(`导出失败: ${res.error}`, 'error');
     } else {
-      toast(`已导出到: ${res.filePath}`, 'success');
+      toast(
+        `已导出 ${formatLabel(exportFormat)}（${rangeLabel(exportRange)}）→ ${res.filePath}`,
+        'success'
+      );
     }
   };
 
@@ -134,9 +175,54 @@ export const NotesPanel: React.FC = () => {
       <div className="notes-panel-header">
         <span className="notes-panel-title">📝 每日留言</span>
         <div className="notes-panel-actions">
-          <button className="btn" onClick={handleExport} title="导出全部留言为 Markdown">
-            📤 导出 MD
-          </button>
+          {/* 导出下拉菜单 */}
+          <div className="dropdown" ref={exportMenuRef}>
+            <button
+              className="btn"
+              onClick={() => setExportOpen((v) => !v)}
+              title="批量导出"
+            >
+              📤 导出 ▾
+            </button>
+            {exportOpen && (
+              <div className="dropdown-menu">
+                <div className="dropdown-section">
+                  <div className="dropdown-label">导出范围</div>
+                  {RANGES.map((r) => (
+                    <button
+                      key={r}
+                      className={`dropdown-item ${exportRange === r ? 'active' : ''}`}
+                      onClick={() => setExportRange(r)}
+                    >
+                      {exportRange === r ? '● ' : '○ '}
+                      {rangeLabel(r)}
+                    </button>
+                  ))}
+                </div>
+                <div className="dropdown-divider" />
+                <div className="dropdown-section">
+                  <div className="dropdown-label">导出格式</div>
+                  {FORMATS.map((f) => (
+                    <button
+                      key={f}
+                      className={`dropdown-item ${exportFormat === f ? 'active' : ''}`}
+                      onClick={() => setExportFormat(f)}
+                    >
+                      {exportFormat === f ? '● ' : '○ '}
+                      {formatLabel(f)} (.{formatExt(f)})
+                    </button>
+                  ))}
+                </div>
+                <div className="dropdown-divider" />
+                <button
+                  className="dropdown-item dropdown-action"
+                  onClick={handleExport}
+                >
+                  📥 立即导出
+                </button>
+              </div>
+            )}
+          </div>
           <button
             className="btn btn-danger"
             onClick={handleDelete}
