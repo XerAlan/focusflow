@@ -107,6 +107,11 @@ export interface ElectronAPI {
   openUrlsBatch: (items: { name: string; url: string }[]) => Promise<OpenUrlResult[]>;
   selectAudioFile: (options?: { multiple?: boolean }) => Promise<SelectAudioFileResult>;
   selectExeFile: () => Promise<{ canceled: boolean; filePath: string }>;
+  saveTextFile: (options: {
+    defaultName: string;
+    content: string;
+    filters?: { name: string; extensions: string[] }[];
+  }) => Promise<{ canceled: boolean; filePath?: string; error?: string }>;
   toggleFullscreen: (isFull: boolean) => Promise<void>;
   getAppVersion: () => Promise<string>;
   setAutoStartup: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;

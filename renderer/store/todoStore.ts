@@ -19,6 +19,12 @@ interface TodoStore {
   remove: (id: string) => void;
   toggle: (id: string) => void;
   reorder: (orderedIds: string[]) => void;
+  /** 批量删除指定 id 列表 */
+  removeMany: (ids: string[]) => void;
+  /** 标记一组 id 为完成 */
+  completeMany: (ids: string[]) => void;
+  /** 取消一组 id 的完成状态 */
+  uncompleteMany: (ids: string[]) => void;
 }
 
 const persist = (state: TodoStore) => saveToStore(STORAGE_KEY, state.todos);
@@ -81,6 +87,35 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
       if (!orderedIds.includes(id)) next.push(item);
     });
     set({ todos: next });
+    persist(get());
+  },
+
+  removeMany: (ids) => {
+    if (ids.length === 0) return;
+    const set_ = new Set(ids);
+    set({ todos: get().todos.filter((t) => !set_.has(t.id)) });
+    persist(get());
+  },
+
+  completeMany: (ids) => {
+    if (ids.length === 0) return;
+    const set_ = new Set(ids);
+    set({
+      todos: get().todos.map((t) =>
+        set_.has(t.id) ? { ...t, completed: true } : t
+      )
+    });
+    persist(get());
+  },
+
+  uncompleteMany: (ids) => {
+    if (ids.length === 0) return;
+    const set_ = new Set(ids);
+    set({
+      todos: get().todos.map((t) =>
+        set_.has(t.id) ? { ...t, completed: false } : t
+      )
+    });
     persist(get());
   }
 }));

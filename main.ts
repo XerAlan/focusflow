@@ -192,6 +192,43 @@ ipcMain.handle(
 );
 
 /**
+ * 保存文本文件（导出 Markdown 用）
+ * - 弹出保存对话框
+ * - 写入 UTF-8 文本
+ */
+ipcMain.handle(
+  'save-text-file',
+  async (
+    _evt,
+    options: {
+      defaultName: string;
+      content: string;
+      filters?: { name: string; extensions: string[] }[];
+    }
+  ) => {
+    try {
+      const result = await dialog.showSaveDialog(mainWindow!, {
+        title: '保存文件',
+        defaultPath: options.defaultName,
+        filters: options.filters || [
+          { name: '所有文件', extensions: ['*'] }
+        ]
+      });
+      if (result.canceled || !result.filePath) {
+        return { canceled: true };
+      }
+      // 写入文件
+      fs.writeFileSync(result.filePath, options.content, {
+        encoding: 'utf-8'
+      });
+      return { canceled: false, filePath: result.filePath };
+    } catch (err: any) {
+      return { canceled: false, error: err?.message || String(err) };
+    }
+  }
+);
+
+/**
  * 选择可执行文件（添加预设软件时使用）
  */
 ipcMain.handle('select-exe-file', async () => {

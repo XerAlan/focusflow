@@ -13,6 +13,7 @@ import type {
 import { loadFromStore, saveToStore } from './persist';
 import { phaseDuration, nextPhase } from '../utils/timer';
 import { useSettingsStore } from './settingsStore';
+import { useUIStore } from './uiStore';
 import { showNotification } from '../ipc';
 
 const STATE_KEY = 'pomodoroState';
@@ -185,7 +186,7 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
   },
 
   onPhaseComplete: () => {
-    // 1. 记录历史
+    // 1. 记录历史 + 系统通知
     const { phase, completedFocusCount, history } = get();
     if (phase === 'focus') {
       const s = useSettingsStore.getState();
@@ -213,18 +214,41 @@ export const usePomodoroStore = create<PomodoroStore>((set, get) => ({
       completedFocusCount: newCompletedFocusCount,
       totalSeconds: newTotal,
       remainingSeconds: newTotal,
-      status: 'idle',
-      sessionStartedAt: null
+      // 关键：专注完成时直接进入 running 状态（自动开始休息）
+      // 休息完成后进入 idle（等用户主动开始下一轮专注）
+      status: phase === 'focus' ? 'running' : 'idle',
+      sessionStartedAt: phase === 'focus' ? new Date().toISOString() : null
     });
     // 持久化阶段状态
     persistState({
       phase: next,
-      status: 'idle',
+      status: phase === 'focus' ? 'running' : 'idle',
       remainingSeconds: newTotal,
       totalSeconds: newTotal,
       completedFocusCount: newCompletedFocusCount,
-      sessionStartedAt: null
+      sessionStartedAt: phase === 'focus' ? new Date().toISOString() : null
     });
+
+    // 3. 如果是专注完成，弹窗提示用户
+    if (phase === 'focus') {
+      useUIStore.getState().showFocusComplete({
+        durationMinutes: settings.pomodoroDuration,
+        nextPhase: next
+      });
+      // 重新启动 interval（因为 phase 切换了，需要用新的 phase 计算）
+      if (get().intervalId) clearInterval(get().intervalId);
+      const id = setInterval(() => {
+        const { remainingSeconds: rs, status: st } = get();
+        if (st !== 'running') return;
+        const nx = rs - 1;
+        if (nx <= 0) {
+          get().onPhaseComplete();
+        } else {
+          set({ remainingSeconds: nx });
+        }
+      }, 1000);
+      set({ intervalId: id });
+    }
   },
 
   setPhase: (phase) => {

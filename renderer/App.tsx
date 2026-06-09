@@ -1,6 +1,6 @@
 /**
  * 应用根组件
- * - 工具栏 / 三列主区 / 状态栏 / 设置 Modal / Toast
+ * - 工具栏 / 三列主区 / 底部 Notes + Clock / 状态栏
  * - 数据初始化：hydrate stores
  */
 import { useEffect } from 'react';
@@ -18,13 +18,14 @@ import { PresetAppsGrid } from './components/PresetAppsGrid';
 import { StatsChart } from './components/StatsChart';
 import { AudioPlayer } from './components/AudioPlayer';
 import { SettingsModal } from './components/SettingsModal';
-import { DailyNotes } from './components/DailyNotes';
+import { NotesPanel } from './components/NotesPanel';
+import { Clock } from './components/Clock';
+import { FocusCompleteDialog } from './components/FocusCompleteDialog';
 
 const Toolbar: React.FC = () => {
   const isFullscreen = useUIStore((s) => s.isFullscreen);
   const setFullscreen = useUIStore((s) => s.setFullscreen);
   const openSettings = useUIStore((s) => s.openSettings);
-  const openNotes = useUIStore((s) => s.openNotes);
   const toast = useUIStore((s) => s.toast);
 
   const handleFullscreen = async () => {
@@ -40,9 +41,6 @@ const Toolbar: React.FC = () => {
         <span className="toolbar-title">FocusFlow</span>
       </div>
       <div className="toolbar-right">
-        <button className="icon-btn" onClick={openNotes} title="每日留言">
-          📝 留言
-        </button>
         <button className="icon-btn" onClick={handleFullscreen} title="全屏切换 (F11)">
           {isFullscreen ? '🗗' : '🗖'} 全屏
         </button>
@@ -75,7 +73,8 @@ const StatusBar: React.FC = () => {
   return (
     <div className="statusbar">
       <div>
-        当前阶段: {phaseText} · 状态: {status === 'running' ? '进行中' : status === 'paused' ? '已暂停' : '空闲'} · 剩余 {remainingText}
+        当前阶段: {phaseText} · 状态:{' '}
+        {status === 'running' ? '进行中' : status === 'paused' ? '已暂停' : '空闲'} · 剩余 {remainingText}
       </div>
       <div>{statusText}</div>
     </div>
@@ -145,9 +144,18 @@ export default function App() {
             </div>
           </ErrorBoundary>
         </div>
+        {/* 底部行：Notes 左 + Clock 右 */}
+        <div className="bottom-row">
+          <ErrorBoundary>
+            <NotesPanel />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Clock />
+          </ErrorBoundary>
+        </div>
         <StatusBar />
         <SettingsModal />
-        <DailyNotes />
+        <FocusCompleteDialog />
         <ToastContainer />
       </div>
     </ErrorBoundary>

@@ -121,7 +121,7 @@ textarea {
   grid-template-columns: 320px 1fr 360px;
   gap: 12px;
   padding: 12px;
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
 }
 
@@ -809,4 +809,205 @@ textarea {
   color: var(--color-text-muted);
   text-align: right;
   flex-shrink: 0;
+}
+
+/* ============ 内嵌式 Notes Panel（底部行左侧） ============ */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+  padding: 0 12px 12px;
+  flex-shrink: 0;
+  min-height: 220px;
+  max-height: 260px;
+}
+
+.notes-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.notes-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+
+.notes-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.notes-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notes-panel .notes-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ============ 时钟面板（底部行右侧） ============ */
+.clock-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 0;
+}
+
+.clock-time {
+  font-size: 38px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: baseline;
+}
+
+.clock-sep {
+  margin: 0 2px;
+  color: var(--color-text-muted);
+  animation: none;
+}
+
+.clock-sep-blink {
+  animation: blink 1s steps(2, end) infinite;
+}
+
+.clock-ss {
+  font-size: 22px;
+  color: var(--color-text-muted);
+  margin-left: 4px;
+}
+
+.clock-date {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+@keyframes blink {
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* ============ 专注完成弹窗 ============ */
+.focus-complete-dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  text-align: center;
+  box-shadow: var(--shadow-2);
+  width: min(440px, 90vw);
+  animation: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.focus-complete-icon {
+  font-size: 64px;
+  margin-bottom: 8px;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.focus-complete-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-primary);
+}
+
+.focus-complete-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-text);
+  margin: 0 0 20px;
+}
+
+.focus-complete-desc strong {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.focus-complete-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.focus-complete-auto {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ============ Todo 批量操作 ============ */
+.todo-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.todo-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-bulk-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.todo-bulk-check input {
+  width: 12px;
+  height: 12px;
+  accent-color: var(--color-primary);
 }

@@ -33,6 +33,13 @@ const api: ElectronAPI = {
   selectExeFile: () =>
     ipcRenderer.invoke('select-exe-file') as Promise<{ canceled: boolean; filePath: string }>,
 
+  saveTextFile: (options) =>
+    ipcRenderer.invoke('save-text-file', options) as Promise<{
+      canceled: boolean;
+      filePath?: string;
+      error?: string;
+    }>,
+
   toggleFullscreen: (isFull: boolean) =>
     ipcRenderer.invoke('toggle-fullscreen', { isFull }),
 

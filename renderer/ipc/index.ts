@@ -44,6 +44,14 @@ export const selectAudioFile = (
 export const selectExeFile = (): Promise<{ canceled: boolean; filePath: string }> =>
   api().selectExeFile();
 
+/** 保存文本文件（导出 Markdown 等） */
+export const saveTextFile = (options: {
+  defaultName: string;
+  content: string;
+  filters?: { name: string; extensions: string[] }[];
+}): Promise<{ canceled: boolean; filePath?: string; error?: string }> =>
+  api().saveTextFile(options);
+
 /** 切换全屏 */
 export const toggleFullscreen = (isFull: boolean): Promise<void> =>
   api().toggleFullscreen(isFull);
